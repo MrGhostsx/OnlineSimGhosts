@@ -26,6 +26,20 @@ from src.vneng import VNEngine
 bot: ClassVar[Any] = telebot.TeleBot(utils.get_token())
 print(f"\33[1;36m::\33[m Bot is running with ID: {bot.get_me().id}")
 
+# Admin user ID (replace with your Telegram user ID)
+ADMIN_ID = (6910445402, 5581804593)  # Replace with your actual Telegram user ID
+
+def is_admin(user_id: int) -> bool:
+    """
+    Check if the user is the admin.
+
+    Parameters:
+        user_id (int): The user's Telegram ID.
+
+    Returns:
+        bool: True if the user is the admin, False otherwise.
+    """
+    return user_id in ADMIN_ID  # Check if user_id is in the ADMIN_ID tuple
 
 @bot.message_handler(commands=["start", "restart"])
 def start_command_handler(message: ClassVar[Any]) -> NoReturn:
@@ -39,6 +53,9 @@ def start_command_handler(message: ClassVar[Any]) -> NoReturn:
     Returns:
         None (typing.NoReturn)
     """
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "Sorry, only the admin can use this bot.")
+        return
 
     # Fetch user's data
     user: ClassVar[Union[str, int]] = User(message.from_user)
@@ -55,7 +72,6 @@ def start_command_handler(message: ClassVar[Any]) -> NoReturn:
         )
     )
 
-
 @bot.message_handler(commands=["help", "usage"])
 def help_command_handler(message: ClassVar[Any]) -> NoReturn:
     """
@@ -68,6 +84,9 @@ def help_command_handler(message: ClassVar[Any]) -> NoReturn:
     Returns:
         None (typing.NoReturn)
     """
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "Sorry, only the admin can use this bot.")
+        return
 
     # Fetch user's data
     user: ClassVar[Union[str, int]] = User(message.from_user)
@@ -92,7 +111,6 @@ def help_command_handler(message: ClassVar[Any]) -> NoReturn:
         )
     )
 
-
 @bot.message_handler(commands=["number"])
 def number_command_handler(message: ClassVar[Any]) -> NoReturn:
     """
@@ -105,6 +123,9 @@ def number_command_handler(message: ClassVar[Any]) -> NoReturn:
     Returns:
         None (typing.NoReturn)
     """
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "Sorry, only the admin can use this bot.")
+        return
 
     # Send waiting prompt
     bot.send_chat_action(chat_id=message.chat.id, action="typing")
@@ -237,7 +258,6 @@ def number_command_handler(message: ClassVar[Any]) -> NoReturn:
         # Return the function
         return 0
 
-
 @bot.callback_query_handler(func=lambda x:x.data.startswith("msg"))
 def number_inbox_handler(call: ClassVar[Any]) -> NoReturn:
     """
@@ -250,6 +270,10 @@ def number_inbox_handler(call: ClassVar[Any]) -> NoReturn:
     Returns:
         None (typing.NoReturn)
     """
+    if not is_admin(call.from_user.id):
+        bot.answer_callback_query(call.id, "Sorry, only the admin can use this bot.", show_alert=True)
+        return
+
     # Initialize the Virtual Number engine
     engine: ClassVar[Any] = VNEngine()
 
@@ -286,7 +310,6 @@ def number_inbox_handler(call: ClassVar[Any]) -> NoReturn:
         show_alert=True
     )
 
-
 @bot.callback_query_handler(func=lambda x:x.data == "new_phone_number")
 def new_number_handler(call):
     """
@@ -299,6 +322,10 @@ def new_number_handler(call):
     Returns:
         None (typing.NoReturn)
     """
+    if not is_admin(call.from_user.id):
+        bot.answer_callback_query(call.id, "Sorry, only the admin can use this bot.", show_alert=True)
+        return
+
     # Get chat id and message id from call object
     chat_id = call.message.chat.id
     message_id = call.message.message_id
@@ -440,7 +467,6 @@ def new_number_handler(call):
 
         # Return the function
         return 0
-
 
 # Run the bot on polling mode
 if __name__ == '__main__':
